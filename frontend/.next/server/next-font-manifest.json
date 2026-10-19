@@ -1,0 +1,47 @@
+{
+  "app": {
+    "[project]/src/app/_not-found/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/cart/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/checkout/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/contact/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/jewelry-care/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/product/[slug]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/shipping-returns/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/shop/[category]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ],
+    "[project]/src/app/shop/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

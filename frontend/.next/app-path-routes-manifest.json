@@ -1,0 +1,14 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/cart/page": "/cart",
+  "/checkout/page": "/checkout",
+  "/contact/page": "/contact",
+  "/favicon.ico/route": "/favicon.ico",
+  "/jewelry-care/page": "/jewelry-care",
+  "/page": "/",
+  "/product/[slug]/page": "/product/[slug]",
+  "/shipping-returns/page": "/shipping-returns",
+  "/shop/[category]/page": "/shop/[category]",
+  "/shop/page": "/shop"
+}

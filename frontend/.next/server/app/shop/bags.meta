@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "headers": {
+    "link": "</_next/static/media/01e4147cff8141ee-s.p.3huc2loe0ie8a.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/shop/layout,_N_T_/shop/[category]/layout,_N_T_/shop/[category]/page,_N_T_/shop/bags"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/shop/$d$category/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 49216,
+    "slots": {
+      "children": {
+        "hints": 49248,
+        "slots": {
+          "children": {
+            "hints": 49248,
+            "slots": {
+              "children": {
+                "hints": 49312,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/12164a3065fb2bd75bd8f41961c0c1ff4202a25ae1876b6235a96869edd20432/$/shop/bags",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/shop/[category]/page"
+    },
+    "isFallback": false
+  }
+}

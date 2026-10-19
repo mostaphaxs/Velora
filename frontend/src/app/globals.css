@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* Velora brand palette: Ivory & Gold */
+@theme {
+  --color-ivory: #f7f3ec;
+  --color-sand: #efe8dc;
+  --color-line: #e2d9ca;
+  --color-ink: #1c1a17;
+  --color-taupe: #8a8277;
+  --color-gold: #b8945a;
+  --color-gold-dark: #9a7a45;
+
+  /* shadcn/ui tokens, mapped to the brand palette */
+  --color-background: var(--color-ivory);
+  --color-foreground: var(--color-ink);
+  --color-primary: var(--color-ink);
+  --color-primary-foreground: var(--color-ivory);
+  --color-secondary: var(--color-sand);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-sand);
+  --color-muted-foreground: var(--color-taupe);
+  --color-accent: var(--color-gold);
+  --color-accent-foreground: var(--color-ivory);
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-gold);
+  --color-destructive: #b3412e;
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-cormorant);
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ivory);
+}
