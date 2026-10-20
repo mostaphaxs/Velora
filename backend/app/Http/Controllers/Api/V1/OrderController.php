@@ -6,6 +6,7 @@ use App\Actions\PlaceOrder;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Support\TelegramAlerts;
 use Illuminate\Http\JsonResponse;
 
 class OrderController extends Controller
@@ -16,6 +17,8 @@ class OrderController extends Controller
     public function store(StoreOrderRequest $request, PlaceOrder $placeOrder): JsonResponse
     {
         $order = $placeOrder->handle($request->validated(), $request->user('sanctum'));
+
+        TelegramAlerts::orderPlaced($order);
 
         return (new OrderResource($order))->response()->setStatusCode(201);
     }

@@ -2,23 +2,38 @@
 
 import { Check, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { useProductColor } from "@/components/product-color";
 import { type CartProduct, useCart } from "@/lib/cart";
 import { storeConfig } from "@/lib/store-config";
 
 export function AddToCart({
   product,
-  inStock,
+  inStock: productInStock,
 }: {
   product: CartProduct;
   inStock: boolean;
 }) {
   const add = useCart((state) => state.add);
+  // For products sold in colors, stock and photo follow the chosen color
+  const { colors, selected } = useProductColor();
+  const inStock = colors.length > 0 ? Boolean(selected?.inStock) : productInStock;
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   function handleAdd() {
     const { slug, name, price, image, category, material } = product;
-    add({ slug, name, price, image, category, material }, quantity);
+    add(
+      {
+        slug,
+        name,
+        price,
+        image: selected?.images[0] ?? image,
+        category,
+        material,
+        color: selected?.name ?? null,
+      },
+      quantity,
+    );
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   }

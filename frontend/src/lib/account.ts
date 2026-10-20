@@ -19,6 +19,7 @@ const orderSchema = z.object({
   items: z.array(
     z.object({
       productName: z.string(),
+      color: z.string().nullable(),
       quantity: z.number(),
       lineTotal: z.number(),
     }),

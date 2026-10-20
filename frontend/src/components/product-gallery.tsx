@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useProductColor } from "@/components/product-color";
 import { ProductImage } from "@/components/product-image";
 import {
   Carousel,
@@ -16,11 +17,37 @@ import { cn } from "@/lib/utils";
 
 const sizes = "(min-width: 768px) 50vw, 100vw";
 
-// Swipeable photo gallery with thumbnails. Falls back to a single image when there is only one.
+// Photo gallery for the product page. Shows the selected color's photos when it has any,
+// otherwise the product's general photos.
 export function ProductGallery({
   product,
 }: {
   product: Pick<Product, "name" | "image" | "images" | "category">;
+}) {
+  const { selected } = useProductColor();
+  const colorImages = selected?.images ?? [];
+  const images = colorImages.length > 0 ? colorImages : product.images;
+
+  // A new key per photo set restarts the carousel on the first photo
+  return (
+    <GalleryView
+      key={colorImages.length > 0 ? selected?.name : "default"}
+      name={product.name}
+      category={product.category}
+      images={images.length > 0 ? images : product.image ? [product.image] : []}
+    />
+  );
+}
+
+// Swipeable photo gallery with thumbnails. Falls back to a single image when there is only one.
+function GalleryView({
+  name,
+  category,
+  images,
+}: {
+  name: string;
+  category: string;
+  images: string[];
 }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -34,20 +61,22 @@ export function ProductGallery({
     };
   }, [api]);
 
-  if (product.images.length <= 1) {
-    return <ProductImage product={product} sizes={sizes} priority />;
+  if (images.length <= 1) {
+    return (
+      <ProductImage product={{ name, category, image: images[0] ?? null }} sizes={sizes} priority />
+    );
   }
 
   return (
     <div>
       <Carousel setApi={setApi} className="group/gallery">
         <CarouselContent className="ml-0">
-          {product.images.map((src, index) => (
+          {images.map((src, index) => (
             <CarouselItem key={src} className="pl-0">
               <div className="relative aspect-[4/5] overflow-hidden bg-sand">
                 <Image
                   src={src}
-                  alt={`${product.name}, photo ${index + 1}`}
+                  alt={`${name}, photo ${index + 1}`}
                   fill
                   sizes={sizes}
                   preload={index === 0}
@@ -62,7 +91,7 @@ export function ProductGallery({
       </Carousel>
 
       <div className="mt-3 grid grid-cols-5 gap-2">
-        {product.images.map((src, index) => (
+        {images.map((src, index) => (
           <button
             key={src}
             type="button"

@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Observers\OrderObserver;
+use App\Support\StorefrontCache;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -25,6 +29,7 @@ use Illuminate\Support\Str;
     'status',
     'payment_method',
 ])]
+#[ObservedBy(OrderObserver::class)]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
@@ -37,6 +42,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class,
+            'restocked_at' => 'datetime',
             'subtotal' => 'integer',
             'shipping' => 'integer',
             'total' => 'integer',
@@ -60,6 +66,30 @@ class Order extends Model
         } while (static::where('reference', $reference)->exists());
 
         return $reference;
+    }
+
+    /**
+     * Put the ordered items back into stock. Runs once per order, even if called again.
+     */
+    public function restock(): void
+    {
+        DB::transaction(function (): void {
+            $order = static::whereKey($this->id)->lockForUpdate()->first();
+
+            if ($order === null || $order->restocked_at !== null) {
+                return;
+            }
+
+            foreach ($order->items()->with(['variant', 'product'])->get() as $item) {
+                ($item->variant ?? $item->product)?->increment('stock', $item->quantity);
+            }
+
+            $order->forceFill(['restocked_at' => now()])->saveQuietly();
+            $this->restocked_at = $order->restocked_at;
+        });
+
+        // increment() skips model events, so tell the shop the stock changed
+        StorefrontCache::refresh();
     }
 
     /**

@@ -21,6 +21,7 @@ const checkoutSchema = z.object({
     .array(
       z.object({
         slug: z.string().min(1).max(255),
+        color: z.string().max(50).optional(),
         quantity: z.number().int().min(1).max(10),
       }),
     )
@@ -40,6 +41,7 @@ const placedOrderSchema = z.object({
     items: z.array(
       z.object({
         productName: z.string(),
+        color: z.string().nullable(),
         quantity: z.number(),
         lineTotal: z.number(),
       }),

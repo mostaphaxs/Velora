@@ -10,6 +10,15 @@ export const categorySchema = z.object({
   tagline: z.string().nullable(),
 });
 
+export const colorSchema = z.object({
+  name: z.string(),
+  hex: z.string(),
+  inStock: z.boolean(),
+  // Set only when few are left, e.g. 2
+  onlyLeft: z.number().int().nullable(),
+  images: z.array(z.string()),
+});
+
 export const productSchema = z.object({
   slug: z.string(),
   name: z.string(),
@@ -21,6 +30,8 @@ export const productSchema = z.object({
   // Main photo (first in the gallery) and the full ordered gallery
   image: z.string().nullable(),
   images: z.array(z.string()),
+  // Colors the product comes in, each with its own stock and photos (empty if none)
+  colors: z.array(colorSchema),
   inStock: z.boolean(),
   isNew: z.boolean(),
   isBestseller: z.boolean(),
@@ -30,6 +41,7 @@ export const productSchema = z.object({
 
 export type Category = z.infer<typeof categorySchema>;
 export type Product = z.infer<typeof productSchema>;
+export type ProductColor = z.infer<typeof colorSchema>;
 
 // Fetches `{ data: ... }` from the API and validates its shape. Returns null on 404.
 async function getData<T extends z.ZodType>(

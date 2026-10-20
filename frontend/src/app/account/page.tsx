@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { AccountSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentCustomer, getCustomerOrders, type CustomerOrder } from "@/lib/account";
@@ -27,7 +28,7 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
       {/* Reads the session cookie, so it streams in at request time */}
-      <Suspense fallback={<p className="text-taupe">Loading your account…</p>}>
+      <Suspense fallback={<AccountSkeleton />}>
         <AccountContent />
       </Suspense>
     </div>
@@ -80,7 +81,9 @@ async function AccountContent() {
                 </div>
               </div>
               <p className="mt-2 text-sm text-taupe">
-                {order.items.map((item) => `${item.quantity} × ${item.productName}`).join(", ")}
+                {order.items
+                  .map((item) => `${item.quantity} × ${item.productName}${item.color ? ` (${item.color})` : ""}`)
+                  .join(", ")}
               </p>
             </li>
           ))}

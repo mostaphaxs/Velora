@@ -1,9 +1,10 @@
 "use client";
 
-import { Heart, Menu, ShoppingBag, UserRound } from "lucide-react";
+import { Heart, Menu, ShoppingBag } from "lucide-react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { HeaderAccount } from "@/components/header-account";
 import { Marquee } from "@/components/ui/marquee";
 import {
   Sheet,
@@ -131,13 +132,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
             >
               <Heart className="size-4.5" strokeWidth={1.5} />
             </Link>
-            <Link
-              href="/account"
-              className="p-2 hover:text-gold-dark"
-              aria-label="My account"
-            >
-              <UserRound className="size-4.5" strokeWidth={1.5} />
-            </Link>
+            <HeaderAccount />
             <Link
               href="/cart"
               className="relative -mr-2 p-2 hover:text-gold-dark"

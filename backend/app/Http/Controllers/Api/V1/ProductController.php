@@ -24,7 +24,7 @@ class ProductController extends Controller
         ]);
 
         $products = Product::active()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query->whereRelation('category', 'slug', $slug))
             ->when($request->boolean('new'), fn (Builder $query) => $query->where('is_new', true))
             ->when($request->boolean('bestseller'), fn (Builder $query) => $query->where('is_bestseller', true))
@@ -39,6 +39,6 @@ class ProductController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        return new ProductResource($product->load('category'));
+        return new ProductResource($product->load(['category', 'variants']));
     }
 }

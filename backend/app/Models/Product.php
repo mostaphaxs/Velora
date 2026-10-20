@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'category_id',
@@ -56,6 +57,33 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Color options, in the order set in the admin.
+     *
+     * @return HasMany<ProductVariant, $this>
+     */
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Whether the product is sold in colors. Products with colors track stock per color;
+     * products without colors use their own stock count.
+     */
+    public function hasVariants(): bool
+    {
+        return $this->variants->isNotEmpty();
+    }
+
+    /**
+     * Units available across the whole product.
+     */
+    public function availableStock(): int
+    {
+        return $this->hasVariants() ? (int) $this->variants->sum('stock') : $this->stock;
     }
 
     /**

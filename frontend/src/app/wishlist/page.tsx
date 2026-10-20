@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ProductGrid } from "@/components/product-card";
+import { ProductGridSkeleton } from "@/components/skeletons";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentCustomer, getWishlistProducts } from "@/lib/account";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,7 @@ export default function WishlistPage() {
       <h1 className="font-serif text-4xl">Wishlist</h1>
       <p className="mt-2 text-taupe">Pieces you&apos;ve saved for later.</p>
       {/* Reads the session cookie, so it streams in at request time */}
-      <Suspense fallback={<p className="mt-10 text-taupe">Loading your wishlist…</p>}>
+      <Suspense fallback={<div className="mt-10"><ProductGridSkeleton count={5} /></div>}>
         <WishlistContent />
       </Suspense>
     </div>

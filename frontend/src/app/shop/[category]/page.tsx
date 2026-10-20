@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CategoryTabs } from "@/components/category-tabs";
 import { ProductGrid } from "@/components/product-card";
+import { CategoryPageSkeleton } from "@/components/skeletons";
 import { getCategories, getCategory, getProducts } from "@/lib/api";
 
 export async function generateStaticParams() {
@@ -42,7 +43,7 @@ export default function CategoryPage({ params }: PageProps<"/shop/[category]">) 
   return (
     <div className="py-14 px-4 sm:px-6 lg:px-10">
       {/* Categories added later in the admin render on first visit, then get cached */}
-      <Suspense fallback={<p className="text-taupe">Loading…</p>}>
+      <Suspense fallback={<CategoryPageSkeleton />}>
         <CategoryContent params={params} />
       </Suspense>
     </div>

@@ -19,7 +19,7 @@ class StoreOrderRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * Only product slugs and quantities are accepted from the client; prices and
+     * Only product slugs, colors and quantities are accepted from the client; prices and
      * totals are always recalculated on the server.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -38,9 +38,10 @@ class StoreOrderRequest extends FormRequest
             'items.*.slug' => [
                 'required',
                 'string',
-                'distinct',
                 Rule::exists('products', 'slug')->where('is_active', true),
             ],
+            // Required for products sold in colors; checked against the product's colors when placing the order
+            'items.*.color' => ['nullable', 'string', 'max:50'],
             'items.*.quantity' => ['required', 'integer', 'min:1', "max:{$maxQuantity}"],
         ];
     }

@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getCurrentCustomer } from "@/lib/account";
+import { safeNextPath } from "@/lib/safe-path";
 import { apiFetch, clearSessionToken, setSessionToken } from "@/lib/session";
 
 export type AuthFormState = {
@@ -47,13 +49,6 @@ function firstErrors(issues: z.core.$ZodIssue[]): AuthFormState["fieldErrors"] {
     errors[field] ??= issue.message;
   }
   return errors;
-}
-
-// Where to go after signing in. Only same-site paths like "/checkout" are allowed,
-// so a crafted link can't bounce customers to another website.
-function safeNextPath(value: FormDataEntryValue | null) {
-  const path = typeof value === "string" ? value : "";
-  return /^\/(?!\/)[\w\-/]*$/.test(path) ? path : "/account";
 }
 
 const unreachable = "We couldn't reach the shop right now. Please try again in a moment.";
@@ -129,4 +124,92 @@ export async function logout() {
   await apiFetch("/auth/logout", { method: "POST" }).catch(() => null);
   await clearSessionToken();
   redirect("/");
+}
+
+export type PasswordFormState = {
+  message?: string;
+  success?: string;
+  fieldErrors?: Partial<Record<"email" | "password" | "passwordConfirmation", string>>;
+};
+
+// Asks the backend to email a reset link. Always answers the same way, so it can't
+// be used to check which emails have accounts.
+export async function requestPasswordReset(
+  _: PasswordFormState,
+  formData: FormData,
+): Promise<PasswordFormState> {
+  const parsed = z.email("Enter a valid email address.").max(255).safeParse(
+    String(formData.get("email") ?? "").trim().toLowerCase(),
+  );
+  if (!parsed.success) return { fieldErrors: { email: parsed.error.issues[0]?.message } };
+
+  const response = await apiFetch("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email: parsed.data }),
+  }).catch(() => null);
+
+  if (!response) return { message: unreachable };
+  if (response.status === 429) return { message: tooMany };
+
+  return { success: "If an account exists for this email, a reset link is on its way. Check your inbox." };
+}
+
+const resetSchema = z
+  .object({
+    token: z.string().min(1).max(255),
+    email: z.email().max(255),
+    password: z.string().min(8, "Use at least 8 characters.").max(255),
+    passwordConfirmation: z.string(),
+  })
+  .refine((data) => data.password === data.passwordConfirmation, {
+    message: "Passwords don't match.",
+    path: ["passwordConfirmation"],
+  });
+
+export async function resetPassword(
+  _: PasswordFormState,
+  formData: FormData,
+): Promise<PasswordFormState> {
+  const parsed = resetSchema.safeParse({
+    token: formData.get("token") ?? "",
+    email: String(formData.get("email") ?? "").trim().toLowerCase(),
+    password: formData.get("password") ?? "",
+    passwordConfirmation: formData.get("passwordConfirmation") ?? "",
+  });
+  if (!parsed.success) {
+    const errors = firstErrors(parsed.error.issues) ?? {};
+    return {
+      message: errors.email || !formData.get("token") ? "This reset link is incomplete. Please request a new one." : undefined,
+      fieldErrors: { password: errors.password, passwordConfirmation: errors.passwordConfirmation },
+    };
+  }
+
+  const { passwordConfirmation, ...rest } = parsed.data;
+  const response = await apiFetch("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ ...rest, password_confirmation: passwordConfirmation }),
+  }).catch(() => null);
+
+  if (!response) return { message: unreachable };
+  if (response.status === 429) return { message: tooMany };
+  if (response.status === 422) {
+    const body = (await response.json().catch(() => ({}))) as { errors?: Record<string, string[]> };
+    return {
+      message: body.errors?.email?.[0],
+      fieldErrors: { password: body.errors?.password?.[0] },
+    };
+  }
+  if (!response.ok) return { message: "Something went wrong. Please try again." };
+
+  redirect("/login?reset=1");
+}
+
+export type SessionSummary = { signedIn: boolean; firstName: string | null };
+
+// Who is signed in, for the header. Only the first name leaves the server.
+export async function getSessionSummary(): Promise<SessionSummary> {
+  const customer = await getCurrentCustomer().catch(() => null);
+  return customer
+    ? { signedIn: true, firstName: customer.name.split(" ")[0] ?? null }
+    : { signedIn: false, firstName: null };
 }

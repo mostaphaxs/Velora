@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout-form";
+import { CheckoutSkeleton } from "@/components/skeletons";
 import { getCurrentCustomer } from "@/lib/account";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default function CheckoutPage() {
       <h1 className="font-serif text-4xl">Checkout</h1>
       <p className="mt-2 text-taupe">Payment is cash on delivery.</p>
       {/* Reads the session cookie, so it streams in at request time */}
-      <Suspense fallback={<p className="mt-10 text-taupe">Loading your order…</p>}>
+      <Suspense fallback={<CheckoutSkeleton />}>
         <CheckoutForCustomer />
       </Suspense>
     </div>

@@ -11,16 +11,25 @@ import { storeConfig } from "@/lib/store-config";
 export type CartProduct = Pick<
   Product,
   "slug" | "name" | "price" | "image" | "category" | "material"
->;
+> & {
+  // Chosen color, for products sold in colors
+  color?: string | null;
+};
 
 export type CartLine = { product: CartProduct; quantity: number };
 
+// Each product + color is its own cart line. Lines without a color keep the plain
+// slug, so carts saved before colors existed still work.
+export function cartLineKey(product: Pick<CartProduct, "slug" | "color">) {
+  return product.color ? `${product.slug}::${product.color}` : product.slug;
+}
+
 type CartState = {
-  // product slug -> line
+  // cart line key -> line
   items: Record<string, CartLine>;
   add: (product: CartProduct, quantity?: number) => void;
-  setQuantity: (slug: string, quantity: number) => void;
-  remove: (slug: string) => void;
+  setQuantity: (key: string, quantity: number) => void;
+  remove: (key: string) => void;
   clear: () => void;
 };
 
@@ -29,34 +38,37 @@ export const useCart = create<CartState>()(
     (set) => ({
       items: {},
       add: (product, quantity = 1) =>
-        set((state) => ({
-          items: {
-            ...state.items,
-            [product.slug]: {
-              product,
-              quantity: Math.min(
-                (state.items[product.slug]?.quantity ?? 0) + quantity,
-                storeConfig.maxQuantityPerItem,
-              ),
+        set((state) => {
+          const key = cartLineKey(product);
+          return {
+            items: {
+              ...state.items,
+              [key]: {
+                product,
+                quantity: Math.min(
+                  (state.items[key]?.quantity ?? 0) + quantity,
+                  storeConfig.maxQuantityPerItem,
+                ),
+              },
             },
-          },
-        })),
-      setQuantity: (slug, quantity) =>
+          };
+        }),
+      setQuantity: (key, quantity) =>
         set((state) => {
           const items = { ...state.items };
-          if (quantity <= 0) delete items[slug];
-          else if (items[slug]) {
-            items[slug] = {
-              ...items[slug],
+          if (quantity <= 0) delete items[key];
+          else if (items[key]) {
+            items[key] = {
+              ...items[key],
               quantity: Math.min(quantity, storeConfig.maxQuantityPerItem),
             };
           }
           return { items };
         }),
-      remove: (slug) =>
+      remove: (key) =>
         set((state) => {
           const items = { ...state.items };
-          delete items[slug];
+          delete items[key];
           return { items };
         }),
       clear: () => set({ items: {} }),

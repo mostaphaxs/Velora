@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductGrid } from "@/components/product-card";
+import { ColorPicker, ProductColorProvider } from "@/components/product-color";
 import { ProductGallery } from "@/components/product-gallery";
+import { ProductPageSkeleton } from "@/components/skeletons";
 import {
   Accordion,
   AccordionContent,
@@ -33,7 +35,7 @@ export default function ProductPage({ params }: PageProps<"/product/[slug]">) {
   return (
     <div className="py-10 px-4 sm:px-6 lg:px-10">
       {/* Products added later in the admin render on first visit, then get cached */}
-      <Suspense fallback={<p className="text-taupe">Loading…</p>}>
+      <Suspense fallback={<ProductPageSkeleton />}>
         <ProductDetails params={params} />
       </Suspense>
     </div>
@@ -67,61 +69,65 @@ async function ProductDetails({
         </Link>
       </nav>
 
-      <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-16">
-        <ProductGallery product={product} />
+      <ProductColorProvider colors={product.colors}>
+        <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-16">
+          <ProductGallery product={product} />
 
-        <div className="md:sticky md:top-32 md:self-start md:py-6">
-          <Badge variant="outline" className="uppercase">
-            {category?.name}
-          </Badge>
-          <h1 className="mt-4 font-serif text-5xl">{product.name}</h1>
-          <p className="mt-4 text-xl">
-            {formatPrice(product.price)}
-            {product.compareAtPrice && (
-              <span className="ml-3 text-base text-taupe line-through">
-                {formatPrice(product.compareAtPrice)}
-              </span>
-            )}
-          </p>
-          <p className="mt-6 leading-relaxed text-taupe">
-            {product.description}
-          </p>
-          <div className="mt-8">
-            <AddToCart product={product} inStock={product.inStock} />
+          <div className="md:sticky md:top-32 md:self-start md:py-6">
+            <Badge variant="outline" className="uppercase">
+              {category?.name}
+            </Badge>
+            <h1 className="mt-4 font-serif text-5xl">{product.name}</h1>
+            <p className="mt-4 text-xl">
+              {formatPrice(product.price)}
+              {product.compareAtPrice && (
+                <span className="ml-3 text-base text-taupe line-through">
+                  {formatPrice(product.compareAtPrice)}
+                </span>
+              )}
+            </p>
+            <p className="mt-6 leading-relaxed text-taupe">
+              {product.description}
+            </p>
+            <ColorPicker />
+            <div className="mt-8">
+              <AddToCart product={product} inStock={product.inStock} />
+            </div>
+            <Accordion defaultValue={["details"]} className="mt-10 border-t border-line">
+              <AccordionItem value="details">
+                <AccordionTrigger className="text-sm">Details</AccordionTrigger>
+                <AccordionContent className="text-taupe">
+                  Material: {product.material}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="shipping">
+                <AccordionTrigger className="text-sm">
+                  Shipping & returns
+                </AccordionTrigger>
+                <AccordionContent className="text-taupe">
+                  Free shipping over{" "}
+                  {formatPrice(storeConfig.freeShippingThreshold)}, otherwise{" "}
+                  {formatPrice(storeConfig.shippingCost)}. Cash on delivery and
+                  30-day returns.{" "}
+                  <Link href="/shipping-returns" className="underline">
+                    Learn more
+                  </Link>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="care">
+                <AccordionTrigger className="text-sm">Care</AccordionTrigger>
+                <AccordionContent className="text-taupe">
+                  Store pieces separately and wipe with a soft cloth.{" "}
+                  <Link href="/jewelry-care" className="underline">
+                    Full care guide
+                  </Link>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
-          <Accordion defaultValue={["details"]} className="mt-10 border-t border-line">
-            <AccordionItem value="details">
-              <AccordionTrigger className="text-sm">Details</AccordionTrigger>
-              <AccordionContent className="text-taupe">
-                Material: {product.material}
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="shipping">
-              <AccordionTrigger className="text-sm">
-                Shipping & returns
-              </AccordionTrigger>
-              <AccordionContent className="text-taupe">
-                Free shipping over{" "}
-                {formatPrice(storeConfig.freeShippingThreshold)}, otherwise{" "}
-                {formatPrice(storeConfig.shippingCost)}. Cash on delivery and
-                30-day returns.{" "}
-                <Link href="/shipping-returns" className="underline">
-                  Learn more
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="care">
-              <AccordionTrigger className="text-sm">Care</AccordionTrigger>
-              <AccordionContent className="text-taupe">
-                Store pieces separately and wipe with a soft cloth.{" "}
-                <Link href="/jewelry-care" className="underline">
-                  Full care guide
-                </Link>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
         </div>
-      </div>
+
+      </ProductColorProvider>
 
       {related.length > 0 && (
         <section className="mt-24">

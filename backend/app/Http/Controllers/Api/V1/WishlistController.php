@@ -19,7 +19,7 @@ class WishlistController extends Controller
         $products = $request->user()
             ->wishlist()
             ->active()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->orderByPivot('created_at', 'desc')
             ->get();
 

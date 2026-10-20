@@ -22,7 +22,10 @@ class OrderInfolist
                             ->hiddenLabel()
                             ->columns(4)
                             ->schema([
-                                TextEntry::make('product_name')->label('Product')->columnSpan(2),
+                                TextEntry::make('product_name')
+                                    ->label('Product')
+                                    ->helperText(fn ($record): ?string => $record->color ? "Color: {$record->color}" : null)
+                                    ->columnSpan(2),
                                 TextEntry::make('quantity')->label('Qty'),
                                 TextEntry::make('line_total')
                                     ->label('Total')

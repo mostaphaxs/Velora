@@ -24,6 +24,9 @@ return [
 
     'max_quantity_per_item' => (int) env('STORE_MAX_QUANTITY_PER_ITEM', 10),
 
+    // Orders still pending after this many days are cancelled and their stock released
+    'cancel_pending_after_days' => (int) env('STORE_CANCEL_PENDING_AFTER_DAYS', 3),
+
     /*
     |--------------------------------------------------------------------------
     | Storefront

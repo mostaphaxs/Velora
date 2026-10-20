@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
         Route::post('login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
         Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum')->name('logout');
+        Route::post('forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:auth')->name('password.email');
+        Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth')->name('password.reset');
     });
 
     Route::middleware('auth:sanctum')->prefix('account')->name('account.')->group(function (): void {

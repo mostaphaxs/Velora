@@ -34,7 +34,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     {},
   );
   // e.g. /login?next=/checkout sends the customer back to checkout after signing in
-  const next = useSearchParams().get("next") ?? "";
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "";
   const nextQuery = next ? `?next=${encodeURIComponent(next)}` : "";
   const invalidateWishlist = useWishlist((store) => store.invalidate);
   const errors = state.fieldErrors ?? {};
@@ -44,6 +45,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     // Signing in changes the wishlist, so hearts reload it on the next page
     <form action={action} onSubmit={invalidateWishlist} noValidate className="mt-8 space-y-5">
       <input type="hidden" name="next" value={next} />
+      {mode === "login" && searchParams.get("reset") === "1" && !state.message && (
+        <p role="status" className="bg-sand px-4 py-3 text-sm">
+          Password changed. Sign in with your new password.
+        </p>
+      )}
       {state.message && (
         <p role="alert" className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {state.message}
@@ -80,6 +86,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         autoComplete={mode === "login" ? "current-password" : "new-password"}
         error={errors.password}
       />
+      {mode === "login" && (
+        <Link href="/forgot-password" className="-mt-3 block text-right text-xs text-taupe underline-offset-4 hover:text-ink hover:underline">
+          Forgot password?
+        </Link>
+      )}
       {mode === "register" && (
         <Field
           label="Confirm password"

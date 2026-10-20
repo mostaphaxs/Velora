@@ -7,6 +7,8 @@ const helpLinks = [
   { href: "/shipping-returns", label: "Shipping & returns" },
   { href: "/jewelry-care", label: "Jewelry care" },
   { href: "/contact", label: "Contact us" },
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms of sale" },
 ];
 
 export async function SiteFooter() {

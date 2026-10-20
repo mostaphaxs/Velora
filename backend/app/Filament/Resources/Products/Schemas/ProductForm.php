@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -64,6 +67,7 @@ class ProductForm
                             ->appendFiles()
                             ->maxFiles(8)
                             ->panelLayout('grid')
+                            ->imagePreviewHeight('180')
                             ->disk('public')
                             ->directory('products')
                             ->visibility('public')
@@ -73,7 +77,7 @@ class ProductForm
                             ->automaticallyCropImagesToAspectRatio()
                             ->imageResizeTargetWidth('1200')
                             ->imageResizeTargetHeight('1500')
-                            ->helperText('Up to 8 photos. Drag to reorder: the first one is the main photo. Any photo is cropped to 4:5 automatically (max 4 MB each).'),
+                            ->helperText('General photos, up to 8. Drag to reorder: the first is the main photo. Each color below can also have its own photos.'),
                     ]),
 
                 Section::make('Pricing & stock')
@@ -96,7 +100,69 @@ class ProductForm
                             ->required()
                             ->integer()
                             ->minValue(0)
-                            ->default(0),
+                            ->default(0)
+                            // Products with colors track stock per color instead
+                            ->visible(fn (Get $get): bool => blank($get('variants'))),
+                    ]),
+
+                Section::make('Colors')
+                    ->description('Add the colors this product comes in. Each color has its own stock and photos; leave empty if the product has a single look.')
+                    ->columnSpanFull()
+                    ->schema([
+                        Repeater::make('variants')
+                            ->hiddenLabel()
+                            ->relationship()
+                            ->orderColumn('sort_order')
+                            ->reorderable()
+                            ->collapsible()
+                            ->live()
+                            ->defaultItems(0)
+                            ->addActionLabel('Add a color')
+                            ->itemLabel(fn (array $state): string => filled($state['name'] ?? null)
+                                ? $state['name'].' · '.((int) ($state['stock'] ?? 0)).' in stock'
+                                : 'New color')
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Color name')
+                                    ->placeholder('e.g. Gold, Silver, Rose gold')
+                                    ->required()
+                                    ->maxLength(50)
+                                    ->distinct()
+                                    ->live(onBlur: true),
+                                ColorPicker::make('hex')
+                                    ->label('Swatch')
+                                    ->required()
+                                    ->regex('/^#[0-9a-fA-F]{6}$/')
+                                    ->default('#c9a45c'),
+                                TextInput::make('stock')
+                                    ->label('Stock for this color')
+                                    ->required()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->default(0)
+                                    ->live(onBlur: true),
+                                FileUpload::make('images')
+                                    ->label('Photos of this color')
+                                    ->image()
+                                    ->multiple()
+                                    ->reorderable()
+                                    ->appendFiles()
+                                    ->maxFiles(6)
+                                    ->panelLayout('grid')
+                                    ->imagePreviewHeight('160')
+                                    ->disk('public')
+                                    ->directory('products/colors')
+                                    ->visibility('public')
+                                    ->maxSize(4096)
+                                    ->imageEditor()
+                                    ->imageAspectRatio('4:5')
+                                    ->automaticallyCropImagesToAspectRatio()
+                                    ->imageResizeTargetWidth('1200')
+                                    ->imageResizeTargetHeight('1500')
+                                    ->helperText('Shown on the product page when this color is selected.')
+                                    ->columnSpanFull(),
+                            ]),
                     ]),
 
                 Section::make('Visibility')

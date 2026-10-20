@@ -3,7 +3,8 @@
 import { Minus, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { ProductImage } from "@/components/product-image";
-import { getSubtotal, useCart, useCartLines, useHydrated } from "@/lib/cart";
+import { CartSkeleton } from "@/components/skeletons";
+import { cartLineKey, getSubtotal, useCart, useCartLines, useHydrated } from "@/lib/cart";
 import type { CartProduct } from "@/lib/cart";
 import { getShipping, storeConfig } from "@/lib/store-config";
 import { formatPrice } from "@/lib/utils";
@@ -15,7 +16,7 @@ export function CartView() {
   const remove = useCart((state) => state.remove);
 
   if (!hydrated) {
-    return <p className="mt-10 text-taupe">Loading your cart…</p>;
+    return <CartSkeleton />;
   }
 
   if (lines.length === 0) {
@@ -40,11 +41,11 @@ export function CartView() {
       <ul className="divide-y divide-line border-y border-line">
         {lines.map(({ product, quantity }) => (
           <CartLine
-            key={product.slug}
+            key={cartLineKey(product)}
             product={product}
             quantity={quantity}
-            onQuantityChange={(value) => setQuantity(product.slug, value)}
-            onRemove={() => remove(product.slug)}
+            onQuantityChange={(value) => setQuantity(cartLineKey(product), value)}
+            onRemove={() => remove(cartLineKey(product))}
           />
         ))}
       </ul>
@@ -106,7 +107,10 @@ function CartLine({
             >
               {product.name}
             </Link>
-            <p className="text-xs text-taupe">{product.material}</p>
+            <p className="text-xs text-taupe">
+              {product.color ? `${product.color} · ` : ""}
+              {product.material}
+            </p>
           </div>
           <button
             type="button"

@@ -8,8 +8,9 @@ import {
   type FieldErrors,
   type PlacedOrder,
 } from "@/app/checkout/actions";
+import { CheckoutSkeleton } from "@/components/skeletons";
 import { buttonVariants } from "@/components/ui/button";
-import { getSubtotal, useCart, useCartLines, useHydrated } from "@/lib/cart";
+import { cartLineKey, getSubtotal, useCart, useCartLines, useHydrated } from "@/lib/cart";
 import { getShipping, storeConfig } from "@/lib/store-config";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ function buildOrderMessage(customer: CustomerDetails, order: PlacedOrder) {
     "",
     ...order.items.map(
       (item) =>
-        `• ${item.quantity} × ${item.productName} (${formatPrice(item.lineTotal)})`,
+        `• ${item.quantity} × ${item.productName}${item.color ? ` (${item.color})` : ""}: ${formatPrice(item.lineTotal)}`,
     ),
     "",
     `Subtotal: ${formatPrice(order.subtotal)}`,
@@ -76,7 +77,7 @@ export function CheckoutForm({
   const signedIn = customer !== null;
 
   if (!hydrated) {
-    return <p className="mt-10 text-taupe">Loading your order…</p>;
+    return <CheckoutSkeleton />;
   }
 
   if (placed) {
@@ -130,9 +131,10 @@ export function CheckoutForm({
       <h2 className="text-xs font-medium tracking-widest uppercase">Your order</h2>
       <ul className="mt-4 space-y-3 text-sm">
         {lines.map(({ product, quantity }) => (
-          <li key={product.slug} className="flex justify-between gap-4">
+          <li key={cartLineKey(product)} className="flex justify-between gap-4">
             <span>
               {quantity} × {product.name}
+              {product.color && <span className="text-taupe"> ({product.color})</span>}
             </span>
             <span>{formatPrice(product.price * quantity)}</span>
           </li>
@@ -228,7 +230,11 @@ export function CheckoutForm({
         city: details.city,
         address: details.address,
         notes: details.notes || undefined,
-        items: lines.map(({ product, quantity }) => ({ slug: product.slug, quantity })),
+        items: lines.map(({ product, quantity }) => ({
+          slug: product.slug,
+          color: product.color ?? undefined,
+          quantity,
+        })),
       });
 
       if (!result.ok) {

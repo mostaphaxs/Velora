@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthForm } from "@/components/auth-form";
+import { SignedInRedirect } from "@/components/signed-in-redirect";
+import { AuthFormSkeleton } from "@/components/skeletons";
 
 export const metadata: Metadata = {
   title: "Create an account",
 };
 
-export default function RegisterPage() {
+export default function RegisterPage({ searchParams }: PageProps<"/register">) {
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
       <p className="text-[11px] tracking-[0.3em] text-gold-dark uppercase">Join Velora</p>
@@ -14,8 +16,9 @@ export default function RegisterPage() {
       <p className="mt-2 text-sm text-taupe">
         See your orders and their status in one place.
       </p>
-      {/* Reads ?next= from the URL */}
-      <Suspense>
+      {/* Reads the session cookie and ?next= from the URL */}
+      <Suspense fallback={<AuthFormSkeleton fields={5} />}>
+        <SignedInRedirect searchParams={searchParams} />
         <AuthForm mode="register" />
       </Suspense>
     </div>
