@@ -3,14 +3,22 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getProduct, type Product } from "@/lib/products";
+import type { Product } from "@/lib/api";
+import { storeConfig } from "@/lib/store-config";
 
-export type CartLine = { product: Product; quantity: number };
+// What the cart remembers about a product. Prices here are for display only;
+// the backend recalculates every total from its own prices at checkout.
+export type CartProduct = Pick<
+  Product,
+  "slug" | "name" | "price" | "image" | "category" | "material"
+>;
+
+export type CartLine = { product: CartProduct; quantity: number };
 
 type CartState = {
-  // product slug -> quantity
-  items: Record<string, number>;
-  add: (slug: string, quantity?: number) => void;
+  // product slug -> line
+  items: Record<string, CartLine>;
+  add: (product: CartProduct, quantity?: number) => void;
   setQuantity: (slug: string, quantity: number) => void;
   remove: (slug: string) => void;
   clear: () => void;
@@ -20,15 +28,29 @@ export const useCart = create<CartState>()(
   persist(
     (set) => ({
       items: {},
-      add: (slug, quantity = 1) =>
+      add: (product, quantity = 1) =>
         set((state) => ({
-          items: { ...state.items, [slug]: (state.items[slug] ?? 0) + quantity },
+          items: {
+            ...state.items,
+            [product.slug]: {
+              product,
+              quantity: Math.min(
+                (state.items[product.slug]?.quantity ?? 0) + quantity,
+                storeConfig.maxQuantityPerItem,
+              ),
+            },
+          },
         })),
       setQuantity: (slug, quantity) =>
         set((state) => {
           const items = { ...state.items };
           if (quantity <= 0) delete items[slug];
-          else items[slug] = quantity;
+          else if (items[slug]) {
+            items[slug] = {
+              ...items[slug],
+              quantity: Math.min(quantity, storeConfig.maxQuantityPerItem),
+            };
+          }
           return { items };
         }),
       remove: (slug) =>
@@ -39,20 +61,23 @@ export const useCart = create<CartState>()(
         }),
       clear: () => set({ items: {} }),
     }),
-    { name: "velora-cart" },
+    {
+      name: "velora-cart",
+      // v1 stores product details instead of bare quantities; older carts are dropped
+      version: 1,
+      migrate: () => ({ items: {} }),
+    },
   ),
 );
 
 export function useCartLines(): CartLine[] {
   const items = useCart((state) => state.items);
-  return useMemo(
-    () =>
-      Object.entries(items).flatMap(([slug, quantity]) => {
-        const product = getProduct(slug);
-        // Skip items whose product was removed from the catalog
-        return product ? [{ product, quantity }] : [];
-      }),
-    [items],
+  return useMemo(() => Object.values(items), [items]);
+}
+
+export function useCartCount() {
+  return useCart((state) =>
+    Object.values(state.items).reduce((sum, line) => sum + line.quantity, 0),
   );
 }
 

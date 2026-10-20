@@ -1,106 +1,252 @@
-import { RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Droplets,
+  HandCoins,
+  RotateCcw,
+  Truck,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { ProductGrid } from "@/components/product-card";
-import { categories, products } from "@/lib/products";
+import type { ReactNode } from "react";
+import { HeroBackground } from "@/components/hero-background";
+import { ProductArt } from "@/components/product-art";
+import { ProductCard } from "@/components/product-card";
+import { ProductRail } from "@/components/product-rail";
+import { Reveal } from "@/components/reveal";
+import { buttonVariants } from "@/components/ui/button";
+import { Marquee } from "@/components/ui/marquee";
+import { getCategories, getProducts } from "@/lib/api";
+import { getCategoryPhoto } from "@/lib/category-photos";
 import { storeConfig } from "@/lib/store-config";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 const perks = [
   {
     icon: Truck,
     title: "Free shipping",
-    text: `On every order over ${formatPrice(storeConfig.freeShippingThreshold)}`,
+    text: `On orders over ${formatPrice(storeConfig.freeShippingThreshold)}`,
   },
-  { icon: RotateCcw, title: "30-day returns", text: "Easy, no questions asked" },
-  { icon: ShieldCheck, title: "Tarnish-resistant", text: "Made for everyday wear" },
+  { icon: HandCoins, title: "Cash on delivery", text: "Pay when it arrives" },
+  { icon: RotateCcw, title: "30-day returns", text: "No questions asked" },
+  { icon: Droplets, title: "Tarnish-resistant", text: "Made for everyday wear" },
 ];
 
-export default function Home() {
+function SectionHeading({ title }: { title: string }) {
+  return (
+    <Reveal className="mb-10">
+      <h2 className="text-3xl font-medium tracking-[0.04em] uppercase sm:text-4xl lg:text-[2.6rem]">
+        {title}
+      </h2>
+    </Reveal>
+  );
+}
+
+// Vertical note framing the left or right edge of the hero (desktop only)
+function HeroSideNote({ side, children }: { side: "left" | "right"; children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "absolute top-1/2 hidden -translate-y-1/2 flex-col items-center gap-4 lg:flex",
+        side === "left" ? "left-8 xl:left-12" : "right-8 xl:right-12",
+      )}
+    >
+      <span className="h-20 w-px bg-linear-to-b from-transparent to-gold/70" />
+      <span className="text-gold" aria-hidden="true">✦</span>
+      <p
+        className={cn(
+          "text-[10px] tracking-[0.35em] whitespace-nowrap text-ink/60 uppercase [writing-mode:vertical-rl]",
+          side === "left" && "rotate-180",
+        )}
+      >
+        {children}
+      </p>
+      <span className="h-20 w-px bg-linear-to-t from-transparent to-gold/70" />
+    </div>
+  );
+}
+
+export default async function Home() {
+  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
   const bestsellers = products.filter((product) => product.isBestseller);
   const newArrivals = products.filter((product) => product.isNew);
+  const lowestPrice = Math.min(...products.map((product) => product.price));
 
   return (
     <>
-      <section className="bg-sand">
-        <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-24 text-center sm:py-32">
-          <p className="text-xs tracking-[0.3em] text-gold uppercase">
-            New collection
-          </p>
-          <h1 className="mt-5 max-w-2xl font-serif text-5xl leading-tight sm:text-6xl">
-            Accessories you&apos;ll reach for every day
-          </h1>
-          <p className="mt-5 max-w-md text-taupe">
-            Bags, rings, chains and more, designed to mix, layer and last.
-          </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+      {/* Hero */}
+      {/* Pulled up under the transparent nav bar (h-14) so the background shows through it */}
+      <section className="relative isolate -mt-14 overflow-hidden pt-14">
+        <HeroBackground />
+        <HeroSideNote side="left">
+          Free shipping over {formatPrice(storeConfig.freeShippingThreshold)}
+        </HeroSideNote>
+        <HeroSideNote side="right">Cash on delivery · 30-day returns</HeroSideNote>
+        <a
+          href="#collections"
+          aria-label="Scroll to collections"
+          className="group absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] tracking-[0.3em] text-ink/50 uppercase transition-colors hover:text-gold-dark lg:flex"
+        >
+          Scroll
+          <span className="relative h-10 w-px overflow-hidden bg-ink/15">
+            <span className="absolute inset-x-0 top-0 h-1/2 animate-[scroll-hint_2s_ease-in-out_infinite] bg-gold-dark" />
+          </span>
+        </a>
+        <div className="mx-auto flex min-h-[calc(100svh-5rem)] max-w-3xl flex-col items-center justify-center px-4 pt-6 pb-20 text-center sm:px-6">
+          <Reveal>
+            <p className="text-[11px] tracking-[0.3em] text-gold-dark uppercase">
+              ✦ The new collection
+            </p>
+            <h1 className="mt-5 font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+              Quiet gold, <em className="text-gold-dark">worn</em>
+              <br />
+              every day.
+            </h1>
+            <p className="mx-auto mt-5 max-w-sm text-sm leading-relaxed text-ink/70">
+              Rings, chains and bags made to layer and last. Delivered across
+              Morocco{products.length > 0 && <>, from {formatPrice(lowestPrice)}</>}.
+            </p>
             <Link
               href="/shop"
-              className="bg-ink px-8 py-3.5 text-sm tracking-widest text-ivory uppercase transition-colors hover:bg-gold"
+              className={cn(buttonVariants({ size: "xl" }), "mt-8 h-11 px-7")}
             >
-              Shop now
+              Shop now <ArrowRight />
             </Link>
-            <Link
-              href="/shop/rings"
-              className="border border-ink px-8 py-3.5 text-sm tracking-widest uppercase transition-colors hover:border-gold hover:text-gold"
-            >
-              Explore rings
-            </Link>
-          </div>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <nav aria-label="Shop by category" className="mt-14 flex flex-wrap items-center justify-center gap-x-1 gap-y-2">
+              {categories.map((category, index) => (
+                <span key={category.slug} className="flex items-center">
+                  {index > 0 && <span className="px-3 text-gold" aria-hidden="true">·</span>}
+                  <Link
+                    href={`/shop/${category.slug}`}
+                    className="font-serif text-xl italic text-ink/80 transition-colors hover:text-gold-dark sm:text-2xl"
+                  >
+                    {category.name}
+                  </Link>
+                </span>
+              ))}
+            </nav>
+          </Reveal>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pt-20">
-        <h2 className="font-serif text-3xl">Shop by category</h2>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/shop/${category.slug}`}
-              className="group flex aspect-square flex-col items-center justify-center border border-line bg-ivory p-4 text-center transition-colors hover:border-gold"
-            >
-              <span className="font-serif text-2xl group-hover:text-gold">
-                {category.name}
-              </span>
-              <span className="mt-2 text-xs text-taupe">
-                {category.tagline}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pt-20">
-        <div className="flex items-end justify-between">
-          <h2 className="font-serif text-3xl">Bestsellers</h2>
-          <Link href="/shop" className="text-sm text-taupe hover:text-gold">
-            View all
+      {/* Category marquee */}
+      <Marquee className="border-y border-line py-6 [--duration:50s] [--gap:4rem]">
+        {categories.map((category, index) => (
+          <Link
+            key={category.slug}
+            href={`/shop/${category.slug}`}
+            className={cn(
+              "font-serif text-5xl font-light hover:text-gold-dark",
+              index % 2 === 1 && "text-gold-dark italic",
+            )}
+          >
+            {category.name} <span className="ml-16 text-xl text-gold">✦</span>
           </Link>
-        </div>
-        <div className="mt-8">
-          <ProductGrid products={bestsellers} />
+        ))}
+      </Marquee>
+
+      {/* Categories */}
+      <section id="collections" className="scroll-mt-20 pt-24 px-4 sm:px-6 lg:px-10">
+        <SectionHeading title="Shop by category" />
+        {/* One horizontal row: scrolls sideways on phones, fits in one line on desktop */}
+        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 py-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-flow-col lg:auto-cols-fr lg:overflow-visible lg:px-0">
+          {categories.map((category) => {
+            const photo = getCategoryPhoto(category.slug);
+
+            return (
+              <Link
+                key={category.slug}
+                href={`/shop/${category.slug}`}
+                className="group w-40 shrink-0 snap-start transition-transform duration-500 ease-out hover:scale-[1.03] sm:w-48 lg:w-auto"
+              >
+                {/* Photos are prepared on the site's ivory, so they blend into the page */}
+                <div className="relative aspect-[3/4] overflow-hidden bg-ivory">
+                  {photo ? (
+                    <Image
+                      src={photo}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 20vw, 192px"
+                      quality={90}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <ProductArt category={category.slug} />
+                  )}
+                </div>
+                <div className="mt-3 flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-sm tracking-wide uppercase transition-colors group-hover:text-gold-dark">
+                      {category.name}
+                    </h3>
+                    <p className="mt-1 truncate text-xs text-taupe">{category.tagline}</p>
+                  </div>
+                  <ArrowUpRight className="size-4 shrink-0 text-ink/50 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-gold-dark" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pt-20">
-        <h2 className="font-serif text-3xl">New in</h2>
-        <div className="mt-8">
-          <ProductGrid products={newArrivals} />
+      {/* Bestsellers: heading on the page margin, cards run edge to edge */}
+      <section className="pt-28">
+        <div className="px-4 sm:px-6 lg:px-10">
+          <SectionHeading title="Bestsellers" />
         </div>
-      </section>
-
-      <section className="mx-auto mt-20 max-w-6xl px-4">
-        <div className="grid gap-8 border-y border-line py-12 sm:grid-cols-3">
-          {perks.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="flex items-center gap-4">
-              <Icon className="size-6 shrink-0 text-gold" strokeWidth={1.5} />
-              <div>
-                <p className="text-sm font-medium">{title}</p>
-                <p className="text-sm text-taupe">{text}</p>
-              </div>
-            </div>
+        <ProductRail>
+          {bestsellers.map((product) => (
+            <ProductCard key={product.slug} product={product} size="large" />
           ))}
-        </div>
+        </ProductRail>
       </section>
+
+      {/* New in */}
+      <section className="pt-28">
+        <div className="px-4 sm:px-6 lg:px-10">
+          <SectionHeading title="New arrivals" />
+        </div>
+        <ProductRail>
+          {newArrivals.map((product) => (
+            <ProductCard key={product.slug} product={product} size="large" />
+          ))}
+        </ProductRail>
+      </section>
+
+      {/* Perks */}
+      <section className="mt-28 grid grid-cols-2 gap-px border-y border-line bg-line lg:grid-cols-4 px-4 sm:px-6 lg:px-10">
+        {perks.map(({ icon: Icon, title, text }) => (
+          <div key={title} className="flex flex-col items-center gap-2 bg-ivory px-4 py-10 text-center">
+            <Icon className="mb-2 size-12 rounded-full bg-sand p-3.5 text-gold-dark" strokeWidth={1.5} />
+            <p className="font-serif text-xl">{title}</p>
+            <p className="text-xs text-taupe">{text}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* WhatsApp CTA */}
+      <Reveal className="mt-24 px-4 sm:px-6 lg:px-10">
+        <div className="bg-sand px-6 py-16 text-center">
+          <p className="text-[11px] tracking-[0.3em] text-gold-dark uppercase">
+            Need help choosing?
+          </p>
+          <h2 className="mx-auto mt-4 max-w-2xl font-serif text-4xl sm:text-5xl">
+            Message us and we&apos;ll help you{" "}
+            <em className="text-gold-dark">find your piece</em>.
+          </h2>
+          <a
+            href={`https://wa.me/${storeConfig.whatsappNumber}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: "xl" }), "mt-9")}
+          >
+            Chat on WhatsApp <ArrowUpRight />
+          </a>
+        </div>
+      </Reveal>
     </>
   );
 }

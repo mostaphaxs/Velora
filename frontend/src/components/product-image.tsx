@@ -1,15 +1,7 @@
-import { CircleDot, Gem, Link2, ShoppingBag, Sparkles } from "lucide-react";
 import Image from "next/image";
-import type { CategorySlug, Product } from "@/lib/products";
+import { ProductArt } from "@/components/product-art";
+import type { Product } from "@/lib/api";
 import { cn } from "@/lib/utils";
-
-const placeholderIcons: Record<CategorySlug, typeof Gem> = {
-  bags: ShoppingBag,
-  rings: CircleDot,
-  chains: Link2,
-  earrings: Sparkles,
-  bracelets: Gem,
-};
 
 export function ProductImage({
   product,
@@ -17,12 +9,13 @@ export function ProductImage({
   priority,
   className,
 }: {
-  product: Product;
+  product: Pick<Product, "name" | "image" | "category"> & { images?: string[] };
   sizes: string;
   priority?: boolean;
   className?: string;
 }) {
-  const Icon = placeholderIcons[product.category];
+  // A second photo, when there is one, fades in on hover
+  const hoverImage = product.images?.[1];
 
   return (
     <div
@@ -32,19 +25,28 @@ export function ProductImage({
       )}
     >
       {product.image ? (
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes={sizes}
-          priority={priority}
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <>
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes={sizes}
+            preload={priority}
+            className="object-cover"
+          />
+          {hoverImage && (
+            <Image
+              src={hoverImage}
+              alt=""
+              fill
+              sizes={sizes}
+              className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            />
+          )}
+        </>
       ) : (
-        // Shown until real product photos are added to /public/products
-        <div className="flex h-full items-center justify-center bg-linear-to-br from-sand via-ivory to-line">
-          <Icon className="size-12 text-gold" strokeWidth={1} />
-        </div>
+        // Shown until photos are uploaded in the admin
+        <ProductArt category={product.category} />
       )}
     </div>
   );

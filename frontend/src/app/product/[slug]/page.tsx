@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductGrid } from "@/components/product-card";
-import { ProductImage } from "@/components/product-image";
+import { ProductGallery } from "@/components/product-gallery";
 import {
-  getCategory,
-  getProduct,
-  getProductsByCategory,
-  products,
-} from "@/lib/products";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { getCategory, getProduct, getProducts } from "@/lib/api";
 import { storeConfig } from "@/lib/store-config";
 import { formatPrice } from "@/lib/utils";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const products = await getProducts();
   return products.map((product) => ({ slug: product.slug }));
 }
 
@@ -21,24 +25,38 @@ export async function generateMetadata({
   params,
 }: PageProps<"/product/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   return { title: product?.name, description: product?.description };
 }
 
-export default async function ProductPage({
+export default function ProductPage({ params }: PageProps<"/product/[slug]">) {
+  return (
+    <div className="py-10 px-4 sm:px-6 lg:px-10">
+      {/* Products added later in the admin render on first visit, then get cached */}
+      <Suspense fallback={<p className="text-taupe">Loading…</p>}>
+        <ProductDetails params={params} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ProductDetails({
   params,
-}: PageProps<"/product/[slug]">) {
+}: Pick<PageProps<"/product/[slug]">, "params">) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
 
-  const category = getCategory(product.category);
-  const related = getProductsByCategory(product.category)
+  const [category, sameCategory] = await Promise.all([
+    getCategory(product.category),
+    getProducts({ category: product.category }),
+  ]);
+  const related = sameCategory
     .filter((item) => item.slug !== product.slug)
     .slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <>
       <nav className="text-xs text-taupe">
         <Link href="/shop" className="hover:text-gold">
           Shop
@@ -50,14 +68,13 @@ export default async function ProductPage({
       </nav>
 
       <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-16">
-        <ProductImage
-          product={product}
-          sizes="(min-width: 768px) 50vw, 100vw"
-          priority
-        />
+        <ProductGallery product={product} />
 
-        <div className="md:py-6">
-          <h1 className="font-serif text-4xl">{product.name}</h1>
+        <div className="md:sticky md:top-32 md:self-start md:py-6">
+          <Badge variant="outline" className="uppercase">
+            {category?.name}
+          </Badge>
+          <h1 className="mt-4 font-serif text-5xl">{product.name}</h1>
           <p className="mt-4 text-xl">
             {formatPrice(product.price)}
             {product.compareAtPrice && (
@@ -69,30 +86,51 @@ export default async function ProductPage({
           <p className="mt-6 leading-relaxed text-taupe">
             {product.description}
           </p>
-          <dl className="mt-6 border-y border-line py-4 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-taupe">Material</dt>
-              <dd>{product.material}</dd>
-            </div>
-          </dl>
           <div className="mt-8">
-            <AddToCart slug={product.slug} />
+            <AddToCart product={product} inStock={product.inStock} />
           </div>
-          <p className="mt-4 text-xs text-taupe">
-            Free shipping over {formatPrice(storeConfig.freeShippingThreshold)}{" "}
-            · 30-day returns
-          </p>
+          <Accordion defaultValue={["details"]} className="mt-10 border-t border-line">
+            <AccordionItem value="details">
+              <AccordionTrigger className="text-sm">Details</AccordionTrigger>
+              <AccordionContent className="text-taupe">
+                Material: {product.material}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="shipping">
+              <AccordionTrigger className="text-sm">
+                Shipping & returns
+              </AccordionTrigger>
+              <AccordionContent className="text-taupe">
+                Free shipping over{" "}
+                {formatPrice(storeConfig.freeShippingThreshold)}, otherwise{" "}
+                {formatPrice(storeConfig.shippingCost)}. Cash on delivery and
+                30-day returns.{" "}
+                <Link href="/shipping-returns" className="underline">
+                  Learn more
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="care">
+              <AccordionTrigger className="text-sm">Care</AccordionTrigger>
+              <AccordionContent className="text-taupe">
+                Store pieces separately and wipe with a soft cloth.{" "}
+                <Link href="/jewelry-care" className="underline">
+                  Full care guide
+                </Link>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
 
       {related.length > 0 && (
         <section className="mt-24">
-          <h2 className="font-serif text-3xl">You may also like</h2>
+          <h2 className="font-serif text-4xl">You may also <em className="text-gold-dark">like</em></h2>
           <div className="mt-8">
             <ProductGrid products={related} />
           </div>
         </section>
       )}
-    </div>
+    </>
   );
 }

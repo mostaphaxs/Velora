@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { categories } from "@/lib/products";
+import { getCategories } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-export function CategoryTabs({ active }: { active?: string }) {
+export async function CategoryTabs({ active }: { active?: string }) {
+  const categories = await getCategories();
   const tabClass = (isActive: boolean) =>
     cn(
       "shrink-0 border px-4 py-2 text-sm transition-colors",

@@ -4,7 +4,7 @@ import { Minus, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { ProductImage } from "@/components/product-image";
 import { getSubtotal, useCart, useCartLines, useHydrated } from "@/lib/cart";
-import type { Product } from "@/lib/products";
+import type { CartProduct } from "@/lib/cart";
 import { getShipping, storeConfig } from "@/lib/store-config";
 import { formatPrice } from "@/lib/utils";
 
@@ -87,7 +87,7 @@ function CartLine({
   onQuantityChange,
   onRemove,
 }: {
-  product: Product;
+  product: CartProduct;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
@@ -130,8 +130,9 @@ function CartLine({
             <span className="w-6 text-center text-sm">{quantity}</span>
             <button
               type="button"
-              className="p-2 hover:text-gold"
+              className="p-2 hover:text-gold disabled:opacity-40"
               aria-label="Increase quantity"
+              disabled={quantity >= storeConfig.maxQuantityPerItem}
               onClick={() => onQuantityChange(quantity + 1)}
             >
               <Plus className="size-3" />

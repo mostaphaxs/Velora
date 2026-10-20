@@ -1,96 +1,158 @@
 "use client";
 
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Heart, Menu, ShoppingBag, UserRound } from "lucide-react";
+import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
-import { useCart, useHydrated } from "@/lib/cart";
-import { categories } from "@/lib/products";
+import { Marquee } from "@/components/ui/marquee";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import type { Category } from "@/lib/api";
+import { useCartCount, useHydrated } from "@/lib/cart";
 import { storeConfig } from "@/lib/store-config";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
-export function SiteHeader() {
+const announcements = [
+  `Free shipping over ${formatPrice(storeConfig.freeShippingThreshold)}`,
+  "Cash on delivery across Morocco",
+  "Create an account to track your orders",
+  "30-day returns",
+];
+
+export function SiteHeader({ categories }: { categories: Category[] }) {
+  const navLinks = [
+    { href: "/shop", label: "Shop all" },
+    ...categories.map((category) => ({
+      href: `/shop/${category.slug}`,
+      label: category.name,
+    })),
+  ];
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [atTop, setAtTop] = useState(true);
+  const { scrollY } = useScroll();
+
+  // Hide while scrolling down, reveal as soon as the user scrolls back up
+  useMotionValueEvent(scrollY, "change", (y) => {
+    const delta = y - (scrollY.getPrevious() ?? 0);
+    if (Math.abs(delta) > 4) setHidden(delta > 0 && y > 120);
+    setAtTop(y < 20);
+  });
   const hydrated = useHydrated();
-  const count = useCart((state) =>
-    Object.values(state.items).reduce((sum, quantity) => sum + quantity, 0),
-  );
+  const count = useCartCount();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ivory/90 backdrop-blur">
-      <div className="bg-ink py-2 text-center text-xs tracking-wide text-ivory">
-        Free shipping on orders over{" "}
-        {formatPrice(storeConfig.freeShippingThreshold)}
-      </div>
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <button
-          type="button"
-          className="-ml-2 p-2 md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+    <motion.header
+      className="sticky top-0 z-40"
+      animate={{ y: hidden && !open ? "-100%" : 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Marquee className="bg-ink py-1 text-[10px] tracking-[0.25em] text-ivory uppercase [--duration:30s] [--gap:3rem]">
+        {announcements.map((text) => (
+          <span key={text}>
+            {text} <span className="ml-12 text-gold">✦</span>
+          </span>
+        ))}
+      </Marquee>
 
-        <Link
-          href="/"
-          className="font-serif text-2xl font-semibold tracking-[0.3em]"
-          onClick={() => setOpen(false)}
-        >
-          VELORA
-        </Link>
-
-        <nav className="hidden gap-8 text-sm md:flex">
-          <Link href="/shop" className="hover:text-gold">
-            Shop all
-          </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/shop/${category.slug}`}
-              className="hover:text-gold"
-            >
-              {category.name}
-            </Link>
-          ))}
-        </nav>
-
-        <Link
-          href="/cart"
-          className="relative -mr-2 p-2 hover:text-gold"
-          aria-label={`Cart, ${hydrated ? count : 0} items`}
-          onClick={() => setOpen(false)}
-        >
-          <ShoppingBag className="size-5" />
-          {hydrated && count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-gold text-[10px] font-medium text-ivory">
-              {count}
-            </span>
-          )}
-        </Link>
-      </div>
-
-      {open && (
-        <nav className="border-t border-line px-4 py-4 md:hidden">
-          <ul className="flex flex-col gap-3 text-base">
-            <li>
-              <Link href="/shop" onClick={() => setOpen(false)}>
-                Shop all
-              </Link>
-            </li>
-            {categories.map((category) => (
-              <li key={category.slug}>
-                <Link
-                  href={`/shop/${category.slug}`}
-                  onClick={() => setOpen(false)}
-                >
-                  {category.name}
+      <div
+        className={cn(
+          "transition-colors duration-300",
+          !atTop && "bg-ivory/90 shadow-sm backdrop-blur-md",
+        )}
+      >
+        <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-10">
+          <div>
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger className="-ml-2 p-2 lg:hidden" aria-label="Open menu">
+                <Menu className="size-4.5" strokeWidth={1.5} />
+              </SheetTrigger>
+              <SheetContent side="left" className="p-8">
+                <SheetTitle className="font-serif text-2xl tracking-[0.4em]">
+                  VELORA
+                </SheetTitle>
+                <nav className="mt-10 flex flex-col divide-y divide-line border-y border-line">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className="py-4 font-serif text-3xl hover:text-gold-dark"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="py-4 font-serif text-3xl hover:text-gold-dark"
+                  >
+                    My account
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setOpen(false)}
+                    className="py-4 font-serif text-3xl hover:text-gold-dark"
+                  >
+                    Wishlist
+                  </Link>
+                </nav>
+              </SheetContent>
+            </Sheet>
+            <nav className="hidden gap-6 text-xs lg:flex">
+              {navLinks.slice(0, 3).map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-gold-dark">
+                  {link.label}
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-    </header>
+              ))}
+            </nav>
+          </div>
+
+          <Link href="/" className="font-serif text-xl tracking-[0.4em]">
+            VELORA
+          </Link>
+
+          <div className="flex items-center justify-end gap-3 lg:gap-5">
+            <nav className="hidden gap-6 text-xs lg:flex">
+              {navLinks.slice(3).map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-gold-dark">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <Link
+              href="/wishlist"
+              className="hidden p-2 hover:text-gold-dark sm:block"
+              aria-label="Wishlist"
+            >
+              <Heart className="size-4.5" strokeWidth={1.5} />
+            </Link>
+            <Link
+              href="/account"
+              className="p-2 hover:text-gold-dark"
+              aria-label="My account"
+            >
+              <UserRound className="size-4.5" strokeWidth={1.5} />
+            </Link>
+            <Link
+              href="/cart"
+              className="relative -mr-2 p-2 hover:text-gold-dark"
+              aria-label={`Cart, ${hydrated ? count : 0} items`}
+            >
+              <ShoppingBag className="size-4.5" strokeWidth={1.5} />
+              {hydrated && count > 0 && (
+                <span className="absolute top-0 right-0 flex size-4 items-center justify-center rounded-full bg-gold text-[10px] text-ivory">
+                  {count}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </motion.header>
   );
 }

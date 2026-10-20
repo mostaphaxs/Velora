@@ -2,15 +2,23 @@
 
 import { Check, Minus, Plus } from "lucide-react";
 import { useState } from "react";
-import { useCart } from "@/lib/cart";
+import { type CartProduct, useCart } from "@/lib/cart";
+import { storeConfig } from "@/lib/store-config";
 
-export function AddToCart({ slug }: { slug: string }) {
+export function AddToCart({
+  product,
+  inStock,
+}: {
+  product: CartProduct;
+  inStock: boolean;
+}) {
   const add = useCart((state) => state.add);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   function handleAdd() {
-    add(slug, quantity);
+    const { slug, name, price, image, category, material } = product;
+    add({ slug, name, price, image, category, material }, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   }
@@ -32,8 +40,9 @@ export function AddToCart({ slug }: { slug: string }) {
         </span>
         <button
           type="button"
-          className="p-3 hover:text-gold"
+          className="p-3 hover:text-gold disabled:opacity-40"
           aria-label="Increase quantity"
+          disabled={quantity >= storeConfig.maxQuantityPerItem}
           onClick={() => setQuantity((value) => value + 1)}
         >
           <Plus className="size-4" />
@@ -42,9 +51,12 @@ export function AddToCart({ slug }: { slug: string }) {
       <button
         type="button"
         onClick={handleAdd}
-        className="flex flex-1 items-center justify-center gap-2 bg-ink px-6 text-sm tracking-widest text-ivory uppercase transition-colors hover:bg-gold"
+        disabled={!inStock}
+        className="flex flex-1 items-center justify-center gap-2 bg-ink px-6 text-sm tracking-widest text-ivory uppercase transition-colors hover:bg-gold disabled:pointer-events-none disabled:bg-taupe"
       >
-        {added ? (
+        {!inStock ? (
+          "Sold out"
+        ) : added ? (
           <>
             <Check className="size-4" /> Added
           </>

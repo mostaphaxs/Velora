@@ -6,6 +6,8 @@ export const storeConfig = {
   hours: "Mon–Sat, 9am–6pm",
   freeShippingThreshold: 500,
   shippingCost: 30,
+  // Must match STORE_MAX_QUANTITY_PER_ITEM in the backend
+  maxQuantityPerItem: 10,
 };
 
 export function getShipping(subtotal: number) {
